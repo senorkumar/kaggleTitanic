@@ -46,3 +46,42 @@ data1.drop(drop_column, axis=1, inplace = True)
 print(data1.isnull().sum())
 print("-"*10)
 print(data_val.isnull().sum())
+
+#done cleaning data, now feature engineering
+
+#loop through both datasets
+for dataset in data_cleaner:
+    dataset['FamilySize'] = dataset ['SibSp'] + dataset['Parch'] + 1
+    dataset['IsAlone'] = 1
+
+    # now update to no/0 if family size is greater than 1
+    dataset['IsAlone'].loc[dataset['FamilySize'] > 1] = 0
+
+    #create feature that takes just the title of the person, eg. Mr or Miss
+    dataset['Title'] = dataset['Name'].str.split(", ", expand=True)[1].str.split(".", expand=True)[0]
+
+    #break fare into 4 buckets, which an equal number of people in each bucket
+    dataset['FareBin'] = pd.qcut(dataset['Fare'], 4)
+
+    #split age into 5 buckets
+    dataset['AgeBin'] = pd.cut(dataset['Age'].astype(int), 5)
+
+    print(data1['Title'].value_counts())
+
+    stat_min = 10
+
+    #this will create a true false series with title name as index
+    title_names = (data1['Title'].value_counts() < stat_min)
+
+    #replace small sample size title with misc
+    data1['Title'] = data1['Title'].apply(lambda x: 'Misc' if title_names.loc[x] == True else x)
+    print(data1['Title'].value_counts())
+    print("-"*10)
+
+
+    data1.info()
+    data_val.info()
+    data1.sample(10)
+
+    #done feature engineering, next converting the formats of categorical data for machine learning
+    
